@@ -171,7 +171,13 @@
     ;; store is bound so DB timezone can be used in date coercion logic
     (qp.store/store-database! database)
     (apply merge-with + (for [table tables
-                              :let  [result (fingerprint-fields! table)]]
+                              :let  [result (try
+                                              (fingerprint-fields! table)
+                                              (catch Exception ex
+                                                (log/warn ex (trs "Unable to fingerprint database {0} table {1}"
+                                                                  (:db_id table)
+                                                                  (:name table)))
+                                                (empty-stats-map 0)))]]
                           (do
                             (log-progress-fn "fingerprint-fields" table)
                             result)))))
